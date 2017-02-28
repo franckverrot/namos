@@ -14,7 +14,7 @@ in the [original paper][1] which makes our lifes way easier...
 ### Freeze (p. 56)
 
 ```haskell
-freeze :: objectReference -> pseudoTime -> versionReference
+freeze :: ObjectReference -> PseudoTime -> VersionReference
 ```
 
 This is a function that generates a version reference from an object reference and a pseudo-time.
@@ -23,27 +23,36 @@ This is a function that generates a version reference from an object reference a
 ### Define  (p. 57)
 
 ```haskell
-data DefineException =
+data Signal =
      NonExistentState
    | Redefinition
 
-define :: (MonadThrow m, Eq versionReference) => versionReference -> value -> m Define'sResult
+define :: VersionReference -> value -> Either Signal value
 ```
 
 This operation creates the version specified by the version reference. It is used by the desugaring of an update operation on an object. The second parameter is a value that will be the value of the version referred to by the version reference, if no error is signalled. The nonexistent state error indicates that an attempt to assign a version that never will exist (no version of the object exist for that pseudo-time). The redefinition error indicates that there was already a valid version associated with the specified version reference. The version_ref/define operation can be applied at most once to a version reference.
 
 ### Lookup  (p. 57)
 
-version_ref/lookup(vr)
-signals(nonexistent state) # => value
+
+```haskell
+lookup :: VersionReference -> Either NonExistentState value
+```
+
 This operation gets the version associated with a particular version reference. It is used in the desugaring of an operation that reads the value of an object. The nonexistent state error indicates that the version reference specifies a state that will never have existed.
 
 
 ### Decompose (p. 57)
 
-version_ref/decompose(vr) # => or, pt
-This operation is just the inverse of version_ref/freeze
+```haskell
+decompose :: VersionReference -> (ObjectReference, PseudoTime)
+```
 
+This operation is the inverse of `freeze` as it satisfies the law:
+
+```haskell
+decompose . freeze $ objRef pt == objRef pt
+```
 
 
 ## ObjectReference
@@ -61,8 +70,11 @@ The paper still mentions CLU and LISP's `eq` function though.
 
 ### Create (p. 58)
 
-object_ref/create(pt) # => or
-This operation creates an object reference whose t-sub-create is specified by the parameter
+```
+create :: PseudoTime -> ObjectReference
+```
+
+This operation creates an object reference whose t<sub>create</sub> is specified by the parameter
 
 
 # Delete (p. 58)
